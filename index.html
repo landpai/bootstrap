@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="cwick by Landapi — a pure-C on-device engine for complete GLM-5.3-Flash, DeepSeek-V4.1-Flash-1017 and MiniMax-M3.1-Flash checkpoints on Apple Silicon Mac, with OpenAI-, Anthropic- and Systemone-compatible APIs.">
+<meta name="theme-color" content="#f4f9fa">
+<meta name="color-scheme" content="light">
+<meta property="og:type" content="website">
+<meta property="og:title" content="cwick | Run the whole model · Landapi">
+<meta property="og:description" content="cwick by Landapi — a pure-C on-device engine for complete GLM-5.3-Flash, DeepSeek-V4.1-Flash-1017 and MiniMax-M3.1-Flash checkpoints on Apple Silicon Mac, with OpenAI-, Anthropic- and Systemone-compatible APIs.">
+<meta property="og:image" content="logo-mark.jpg">
+<meta name="twitter:card" content="summary">
+<title>cwick | Landapi</title>
+<link rel="icon" type="image/jpeg" href="logo-mark.jpg">
+<link rel="preload" as="image" href="logo-mark.jpg">
+<style>
+  :root{
+    --bg:#f4f9fa;
+    --surface:#ffffff;
+    --ink:#0c2b33;
+    --muted:#52737b;
+    --teal:#0d8492;
+    --teal-bright:#12a6b5;
+    --teal-soft:#e6f6f8;
+    --line:#dcebee;
+    --shadow:0 14px 40px rgba(12,74,86,.08);
+    --shadow-hover:0 20px 46px rgba(12,74,86,.14);
+    --radius:20px;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    --header-h:112px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-padding-top:calc(var(--header-h) + 14px)}
+  .section[hidden]{display:none}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.68;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(900px 560px at 88% -8%,rgba(93,211,225,.20),transparent 70%),
+      radial-gradient(700px 520px at -10% 28%,rgba(18,166,181,.10),transparent 72%),
+      linear-gradient(180deg,#fbfefe 0%,var(--bg) 42%,#eef7f8 100%);
+  }
+  /* A second fixed tint layer drifts soft colour blobs behind the content.
+     Only background-position and opacity animate: nothing can push the
+     layout or add a scrollbar. */
+  body::after{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(closest-side circle at 50% 50%,rgba(64,158,205,.16),transparent 100%),
+      radial-gradient(closest-side circle at 50% 50%,rgba(112,214,208,.14),transparent 100%),
+      radial-gradient(closest-side circle at 50% 50%,rgba(146,192,235,.11),transparent 100%);
+    background-size:78vw 78vw,86vw 86vw,64vw 64vw;
+    background-repeat:no-repeat;
+    animation:bgFlow 30s ease-in-out infinite alternate;
+  }
+  @keyframes bgFlow{
+    0%  {opacity:.36;background-position:-22vw 34vh,66vw -30vh,18vw 66vh}
+    35% {opacity:.74;background-position:-6vw 18vh,48vw -12vh,34vw 48vh}
+    70% {opacity:.54;background-position:10vw 44vh,58vw 6vh,8vw 60vh}
+    100%{opacity:.82;background-position:-14vw 56vh,72vw -22vh,26vw 38vh}
+  }
+  a{color:var(--teal);text-decoration:none}
+  a:hover{color:var(--teal-bright)}
+  img{max-width:100%;display:block}
+  button{font:inherit}
+  :focus-visible{outline:3px solid var(--teal-bright);outline-offset:3px;border-radius:6px}
+  .wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
+  .skip{position:absolute;left:-9999px;top:0;background:#fff;padding:10px 16px;z-index:100;border-radius:0 0 10px 0}
+  .skip:focus{left:0}
+
+  /* ---------- header ---------- */
+  .site-header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.86);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+  .header-inner{display:flex;align-items:center;gap:14px;min-height:66px}
+  .brand{display:flex;align-items:center;gap:10px;flex:0 0 auto;color:var(--ink)}
+  .brand:hover{color:var(--ink)}
+  .brand img{width:42px;height:42px;object-fit:cover;border-radius:50%;background:#fff}
+  .brand-name{font-size:19px;font-weight:750;letter-spacing:-.02em;line-height:1.1}
+  .brand-sub{font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);font-weight:700;line-height:1.4}
+  .header-spacer{flex:1 1 auto}
+  .lang-switch{display:flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:#fff;flex:0 0 auto}
+  .lang-btn{border:0;background:transparent;color:var(--muted);padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;line-height:1.4;transition:background .18s,color .18s}
+  .lang-btn[aria-pressed="true"]{background:var(--teal);color:#fff;box-shadow:0 3px 10px rgba(13,132,146,.25);animation:langPulse 2.8s ease-in-out infinite}
+  @keyframes langPulse{
+    0%  {box-shadow:0 3px 10px rgba(13,132,146,.25),0 0 0 0 rgba(18,166,181,.34)}
+    65% {box-shadow:0 4px 14px rgba(13,132,146,.32),0 0 0 9px rgba(18,166,181,0)}
+    100%{box-shadow:0 3px 10px rgba(13,132,146,.25),0 0 0 0 rgba(18,166,181,0)}
+  }
+
+  /* ---------- product tab ---------- */
+  .tabbar{background:rgba(255,255,255,.55);border-bottom:1px solid var(--line)}
+  .tabbar-inner{display:flex;align-items:center;gap:18px}
+  .tabbar-label{font-size:10px;font-weight:800;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding-left:2px}
+  .tabs{display:flex;gap:4px;flex:1 1 auto;min-width:0}
+  .tab{appearance:none;border:0;background:transparent;color:var(--muted);font-weight:700;font-size:16px;letter-spacing:-.01em;
+       padding:13px 22px 12px;border-bottom:3px solid transparent;cursor:pointer;display:flex;align-items:center;gap:9px;white-space:nowrap}
+  .tab::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s,box-shadow .2s}
+  .tab[aria-selected="true"]{color:var(--teal)}
+  .tab[aria-selected="true"]::before{background:var(--teal-bright);box-shadow:0 0 0 4px rgba(18,166,181,.14);animation:dotPulse 3.2s ease-in-out infinite}
+  @keyframes dotPulse{
+    0%,100%{box-shadow:0 0 0 4px rgba(18,166,181,.14)}
+    50%    {box-shadow:0 0 0 8px rgba(18,166,181,.04)}
+  }
+  .tab-count{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
+
+  /* ---------- four sub-tabs under the cwick tab ---------- */
+  .subtabs{background:rgba(255,255,255,.72);border-top:1px solid var(--line)}
+  .subtabs-inner{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:7px 0;
+    -webkit-overflow-scrolling:touch}
+  .subtabs-inner::-webkit-scrollbar{display:none}
+  .subtab{appearance:none;border:1px solid transparent;background:transparent;border-radius:999px;
+    padding:6px 15px;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);
+    white-space:nowrap;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
+  .subtab:hover{color:var(--teal)}
+  .subtab[aria-selected="true"]{background:var(--teal-soft);color:var(--teal);border-color:#bfe9ef;animation:subPulse 3.4s ease-in-out infinite}
+  @keyframes subPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(18,166,181,.20)}
+    60%    {box-shadow:0 0 0 6px rgba(18,166,181,0)}
+  }
+  .subtab:focus-visible,.tab:focus-visible,.lang-btn:focus-visible{outline:2px solid var(--teal-bright);outline-offset:2px}
+
+  /* ---------- hero ---------- */
+  .hero{padding:clamp(44px,7vw,86px) 0 clamp(30px,5vw,54px)}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:clamp(24px,5vw,64px);align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin:0 0 18px}
+  .eyebrow::before{content:"";width:26px;height:2px;background:var(--teal-bright);border-radius:2px}
+  h1{font-size:clamp(60px,10vw,116px);line-height:.94;letter-spacing:-.065em;margin:0 0 22px;font-weight:800;color:var(--ink)}
+  h1 .dot{color:var(--teal-bright)}
+  .hero-lead{font-size:clamp(21px,2.6vw,30px);line-height:1.35;font-weight:700;letter-spacing:-.02em;margin:0 0 16px;max-width:20ch}
+  .hero-desc{color:var(--muted);font-size:clamp(15px,1.5vw,17px);margin:0 0 30px;max-width:56ch}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:12px 22px;border-radius:999px;font-family:inherit;appearance:none;font-weight:700;font-size:14.5px;
+       border:1px solid transparent;transition:transform .18s,box-shadow .18s,background .18s;cursor:pointer}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px rgba(13,132,146,.24)}
+  .btn-primary:hover{background:var(--teal-bright);color:#fff;box-shadow:0 14px 30px rgba(13,132,146,.30)}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+  .btn-ghost:hover{color:var(--teal);border-color:var(--teal-bright)}
+  .hero-meta{margin-top:26px;font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.01em}
+  .hero-art{position:relative;display:flex;align-items:center;justify-content:center;min-height:340px}
+  .hero-art::before{content:"";position:absolute;width:min(400px,88%);aspect-ratio:1;border-radius:50%;
+    background:radial-gradient(circle at 50% 50%,rgba(111,214,226,.32),rgba(111,214,226,.06) 62%,transparent 70%);filter:blur(6px)}
+  .hero-art::after{content:"";position:absolute;width:min(430px,94%);aspect-ratio:1;border-radius:50%;border:1px solid rgba(13,132,146,.16);
+    box-shadow:0 0 0 26px rgba(13,132,146,.035),0 0 0 54px rgba(13,132,146,.022)}
+  .hero-art img{position:relative;z-index:1;width:min(340px,78%);aspect-ratio:1;object-fit:cover;border-radius:50%;
+    box-shadow:0 24px 60px rgba(12,74,86,.16)}
+  .art-chip{position:absolute;z-index:2;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 14px;
+    box-shadow:var(--shadow);font-size:12px;font-weight:700;color:var(--teal);white-space:nowrap}
+  .art-chip b{font-size:16px;color:var(--ink);margin-right:5px;font-family:var(--mono)}
+  .art-chip.top{top:6%;right:0}
+  .art-chip.bottom{bottom:7%;left:-2%}
+  .art-caption{margin:20px auto 0;max-width:38ch;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.6}
+  .art-caption strong{color:var(--teal);font-size:10px;letter-spacing:.15em;text-transform:uppercase;display:block;margin-bottom:5px}
+
+  /* ---------- stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px;margin:0 0 8px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 18px;box-shadow:var(--shadow)}
+  .stat .value{font-size:clamp(22px,2.6vw,30px);font-weight:800;letter-spacing:-.04em;line-height:1.15;color:var(--teal)}
+  .stat .value.long{font-size:clamp(16px,1.7vw,21px);letter-spacing:-.05em;white-space:nowrap}
+  .stat .label{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+  /* ---------- sections ---------- */
+  .section{padding:clamp(52px,7vw,88px) 0 0}
+  .section-head{max-width:70ch;margin-bottom:30px}
+  .section-head h2{font-size:clamp(26px,3.6vw,40px);letter-spacing:-.035em;line-height:1.2;margin:0 0 12px;font-weight:780}
+  .section-head p{margin:0;color:var(--muted);font-size:clamp(14.5px,1.5vw,16.5px)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0;max-width:100%}
+  pre{max-width:100%;min-width:0}
+  code,.mono{font-family:var(--mono);font-size:.92em}
+  .inline-code{background:var(--teal-soft);color:#0a6a76;border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:.86em;word-break:break-word}
+
+  /* ---------- architecture ---------- */
+  .arch{padding:clamp(22px,3vw,32px)}
+  .arch-flow{display:flex;flex-direction:column;align-items:center;gap:0}
+  .arch-box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 20px;text-align:center;font-size:14px;font-weight:650;box-shadow:0 4px 14px rgba(12,74,86,.05)}
+  .arch-box.accent{background:var(--teal);color:#fff;border-color:var(--teal);font-size:15px}
+  .arch-box small{display:block;font-family:var(--mono);font-size:11px;font-weight:500;opacity:.72;margin-top:3px}
+  .arch-arrow{width:2px;height:26px;background:linear-gradient(180deg,var(--line),var(--teal-bright));position:relative}
+  .arch-arrow::after{content:"";position:absolute;bottom:-1px;left:-4px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--teal-bright)}
+  .arch-backends{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;margin-top:4px}
+  .backend{border:1px solid var(--line);border-radius:14px;padding:15px 12px;background:linear-gradient(180deg,#fff,#f7fcfd);text-align:left}
+  .backend b{display:block;font-size:13.5px;margin-bottom:6px;letter-spacing:-.01em;overflow-wrap:anywhere}
+  .backend span{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6;word-break:break-word}
+  .arch-side{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;width:100%;margin-top:20px}
+  .arch-side div{border-left:3px solid var(--teal-bright);background:var(--teal-soft);border-radius:0 10px 10px 0;padding:10px 13px;font-size:12.5px;color:#0a5e69;line-height:1.5}
+  .arch-side code{font-size:11px;color:#084e58}
+  .arch-state{margin-top:26px;border-top:1px dashed var(--line);padding-top:20px}
+  .arch-state h4{margin:0 0 12px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .state-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+  .state-grid div{font-size:12.5px;color:var(--muted);background:#f8fcfd;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+  .state-grid b{color:var(--ink);display:block;font-size:12.5px;margin-bottom:3px}
+  .arch-note{margin:20px 0 0;font-size:13px;color:var(--muted);line-height:1.7}
+
+  /* ---------- tables ---------- */
+  .table-scroll{overflow-x:auto;border-radius:var(--radius)}
+  table{border-collapse:collapse;width:100%;background:var(--surface);font-size:14px;min-width:660px}
+  th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+  td b{display:block;min-width:0;overflow-wrap:anywhere;word-break:break-word}
+  th{background:var(--teal-soft);color:#0a5e69;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#f9fdfd}
+  td b{font-weight:750}
+  td .sub{display:block;color:var(--muted);font-size:12px;margin-top:3px;line-height:1.5}
+  .note{margin:14px 0 0;font-size:12.5px;color:var(--muted);line-height:1.7}
+
+
+
+  /* ---------- quick start ---------- */
+  .steps{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+  .step{padding:22px 24px;min-width:0}
+  .step h3{margin:0 0 6px;font-size:16px;letter-spacing:-.01em}
+  .step p{margin:0 0 14px;color:var(--muted);font-size:13.5px}
+  pre{margin:0;background:#0f2b33;color:#d8eff1;border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;-webkit-overflow-scrolling:touch}
+  pre .cm{color:#7fa9b1}
+  pre .cmd{color:#8fe3ec}
+  pre .str{color:#f0d48a}
+
+  /* ---------- api ---------- */
+  .api-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px}
+  .api-row{display:flex;align-items:baseline;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 16px;box-shadow:0 3px 10px rgba(12,74,86,.035)}
+  .method{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.04em;padding:3px 7px;border-radius:5px;background:var(--teal-soft);color:#0a6a76}
+  .method.post{background:#fff2dc;color:#8a5c07}
+  .method.put{background:#eee9fb;color:#6047a8}
+  .api-path{font-family:var(--mono);font-size:12.5px;color:var(--ink);word-break:break-all}
+  .api-row p{margin:4px 0 0;color:var(--muted);font-size:12.5px;line-height:1.55}
+
+  .file-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
+  .file-list li{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .file-list li:last-child{border-bottom:0}
+  .file-list code{display:block;color:var(--ink);font-size:12.5px;font-weight:700;margin-bottom:2px}
+
+  /* ---------- footer ---------- */
+  footer{margin-top:clamp(60px,9vw,110px);border-top:1px solid var(--line);background:rgba(255,255,255,.7)}
+  .footer-inner{display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding-top:34px;padding-bottom:38px}
+  .footer-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:var(--ink)}
+  .footer-brand img{width:34px;height:34px;object-fit:cover;border-radius:50%}
+  .footer-line{flex:1 1 300px;color:var(--muted);font-size:13px}
+  .footer-links{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;font-weight:650}
+  .footer-copy{width:100%;color:var(--muted);font-size:11.5px;border-top:1px solid var(--line);padding-top:16px;margin-top:6px}
+
+  /* ---------- copyable code ---------- */
+  .code-wrap{position:relative;min-width:0}
+  .code-wrap.has-copy pre{padding-top:46px}
+  .copy-btn{position:absolute;top:9px;right:9px;z-index:2;display:inline-flex;align-items:center;gap:6px;
+    border:1px solid rgba(200,231,234,.32);background:rgba(255,255,255,.09);color:#c8e7ea;
+    border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;line-height:1.4;cursor:pointer;
+    font-family:var(--sans);transition:background .18s,color .18s,border-color .18s}
+  .copy-btn::before{content:"⧉";font-size:13px;line-height:1}
+  .copy-btn:hover{background:rgba(255,255,255,.18);border-color:rgba(200,231,234,.6)}
+  .copy-btn.done{background:rgba(111,214,226,.2);border-color:#6fd6e2;color:#e6fbfe}
+  .copy-btn.done::before{content:"✓"}
+
+  /* ---------- API compatibility families ---------- */
+  .api-kinds{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:0 0 24px}
+  .api-kind{min-width:0;padding:19px 20px 17px;display:flex;flex-direction:column}
+  .api-kind .kind-tag{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--teal);background:var(--teal-soft);
+    border-radius:999px;padding:3px 10px;margin-bottom:11px}
+  .api-kind h3{font-size:15.5px;margin:0 0 7px;letter-spacing:-.01em}
+  .api-kind p{margin:0 0 11px;font-size:12.8px;line-height:1.62;color:var(--muted);flex:1 1 auto}
+  .api-kind code{display:block;font-family:var(--mono);font-size:11px;line-height:1.7;
+    color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;
+    padding:8px 10px;overflow-wrap:anywhere}
+
+  /* ---------- endpoint filter ---------- */
+  .api-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+  .api-search{position:relative;flex:1 1 260px;min-width:0;max-width:420px}
+  .api-search::before{content:"⌕";position:absolute;left:13px;top:50%;transform:translateY(-52%);
+    color:var(--muted);font-size:19px;line-height:1;pointer-events:none}
+  .api-search input{width:100%;border:1px solid var(--line);background:#fff;border-radius:999px;
+    padding:9px 15px 9px 36px;font:inherit;font-size:13.5px;color:var(--ink);outline:none;
+    transition:border-color .18s,box-shadow .18s}
+  .api-search input:focus{border-color:var(--teal-bright);box-shadow:0 0 0 3px rgba(18,166,181,.14)}
+  .api-search input::placeholder{color:#8aa6ac}
+  .api-count{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+  .api-row[hidden],.api-empty[hidden]{display:none}
+  .api-empty{margin:0;padding:22px;text-align:center;color:var(--muted);font-size:13.5px;
+    border:1px dashed var(--line);border-radius:var(--radius);background:rgba(255,255,255,.6)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+
+  /* ---------- entrance: fade in and rise ---------- */
+  /* `backwards` fill only covers the stagger delay. Once the animation ends
+     the element falls back to its normal styles, so hover transforms still
+     work; with scripting off or motion disabled every card is simply visible
+     and nothing can be left hidden on a fast load. */
+  @keyframes riseIn{
+    from{opacity:0;transform:translateY(16px)}
+    to  {opacity:1;transform:none}
+  }
+  .rise{
+    animation:riseIn .62s cubic-bezier(.22,.85,.3,1) backwards;
+    animation-delay:calc(var(--rise-i,0) * 55ms);
+  }
+  /* Safety net for a frozen animation clock: scripting adds this class once
+     the entrance has settled, so a stalled animation can never strand a card
+     invisible. With scripting off the .rise class never exists at all. */
+  .rise-ended{animation:none!important;opacity:1!important}
+
+  /* ---------- language switch: smooth content fade ---------- */
+  @keyframes contentFade{from{opacity:.3}to{opacity:1}}
+  .lang-fade{animation:contentFade .42s ease-out backwards}
+
+  /* ---------- layout + interactive transitions ---------- */
+  .wrap,.site-header,.header-inner,.tabbar-inner,.subtabs-inner,.section,
+  .hero-grid,.stats,.arch-backends,.arch-side,.state-grid,.api-kinds,.api-list,
+  .steps,.footer-inner,h1,.hero-lead{
+    transition:padding .32s ease,gap .32s ease,grid-template-columns .32s ease,
+               font-size .32s ease,min-height .32s ease;
+  }
+  a,button,input,.stat,.card,.api-row,.backend,.arch-side > div,.state-grid > div,
+  tbody tr,.footer-links a,.tab,.lang-btn,.copy-btn,.subtab,.btn,.brand,.method{
+    transition:transform .22s ease,box-shadow .22s ease,background-color .22s ease,
+               border-color .22s ease,color .22s ease,opacity .22s ease;
+  }
+  .stat:hover,.card:hover,.backend:hover,.arch-side > div:hover,.state-grid > div:hover{
+    transform:translateY(-3px);box-shadow:var(--shadow-hover);border-color:#bfe9ef;
+  }
+  .api-row:hover{
+    background:#f3fbfc;border-color:#bfe9ef;transform:translateY(-2px);
+    box-shadow:0 8px 22px rgba(12,74,86,.09);
+  }
+  tbody tr:hover{background:#f2fbfc;box-shadow:0 4px 16px rgba(12,74,86,.07)}
+  .file-list li:hover{background:var(--teal-soft)}
+  .footer-links a:hover{color:var(--teal-bright);transform:translateY(-1px)}
+  .tab:hover{color:var(--teal);background:rgba(18,166,181,.05)}
+  .lang-btn:not([aria-pressed="true"]):hover,
+  .subtab:not([aria-selected="true"]):hover{
+    background:var(--teal-soft);color:var(--teal);border-color:#bfe9ef;
+  }
+  .copy-btn:hover{transform:translateY(-1px)}
+  .btn:active,.tab:active,.subtab:active,.lang-btn:active,.copy-btn:active{transform:scale(.96)}
+
+  /* ---------- focus target for language / sub-tab switches ---------- */
+  #panel-cwick:focus,#panel-cwick:focus-visible{outline:none}
+  #panel-cwick h1:focus,#panel-cwick h2:focus{outline:none}
+  #panel-cwick h1:focus-visible,#panel-cwick h2:focus-visible{
+    outline:2px solid var(--teal-bright);outline-offset:6px;border-radius:8px;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:980px){
+    .hero-grid{grid-template-columns:1fr;gap:30px}
+    .hero-art{min-height:270px}
+    .hero-art img{width:min(260px,62%)}
+    .hero-art::after{width:min(320px,80%)}
+    .hero-art::before{width:min(300px,76%)}
+    .art-chip.top{right:8%}
+    .art-chip.bottom{left:8%}
+    .art-caption{margin-top:14px}
+    .hero-grid{grid-template-columns:minmax(0,1fr)}
+    .arch-backends{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:760px){
+    html{scroll-padding-top:calc(var(--header-h) + 8px)}
+    .header-inner{min-height:58px}
+    .brand img{width:36px;height:36px}
+    .brand-name{font-size:17px}
+    .brand-sub{font-size:9px}
+    .tab{padding:11px 16px 10px;font-size:15px}
+    .tab-count{display:none}
+    .tabbar-label{display:none}
+    .subtabs-inner{padding:6px 0}
+    .subtab{padding:6px 12px;font-size:12px}
+    .hero{padding-top:34px}
+    h1{font-size:clamp(54px,17vw,80px)}
+    .hero-lead{max-width:none}
+    .section{padding-top:52px}
+    .step{padding:20px 18px}
+    .arch{padding:18px}
+    .arch-backends{grid-template-columns:1fr 1fr}
+    .backend{padding:12px 10px}
+    .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .stat{padding:15px 14px}
+    .stat .value{font-size:21px}
+    /* tables become cards on phones */
+    table{min-width:0}
+    thead{display:none}
+    tbody,tr,td{display:block;width:100%}
+    tbody tr{margin-bottom:12px;border:1px solid var(--line);border-radius:14px;padding:8px 12px;background:#fff;box-shadow:0 4px 12px rgba(12,74,86,.04)}
+    td{border:0;border-bottom:1px dashed var(--line);padding:8px 2px;display:flex;justify-content:space-between;gap:16px;text-align:right;font-size:13px}
+    tbody tr td:last-child{border-bottom:0}
+    td::before{content:attr(data-label);flex:0 0 auto;color:var(--muted);font-weight:700;font-size:11px;text-align:left;padding-top:2px}
+    td .sub{text-align:right}
+    /* the full checkpoint name needs its own row instead of a narrow flex column */
+    tbody tr td:first-child{display:block;text-align:left}
+    tbody tr td:first-child::before{display:block;padding-top:0;margin-bottom:3px}
+    tbody tr td:first-child .sub{text-align:left}
+    .footer-inner{padding-top:26px;padding-bottom:28px}
+    .api-tools{gap:8px}
+    .api-search{flex:1 1 100%;max-width:none}
+    .api-count{font-size:11.5px}
+  }
+  @media (max-width:400px){
+    .arch-backends{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr 1fr}
+    .lang-btn{padding:5px 9px;font-size:12px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+    .rise,.lang-fade{opacity:1!important;transform:none!important}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#main" aria-label="Landapi home">
+      <img src="logo-mark.jpg" alt="Landapi" data-i18n-alt="brand.alt">
+      <span>
+        <span class="brand-name">Landapi</span>
+        <span class="brand-sub" data-i18n="brand.sub">On-device AI</span>
+      </span>
+    </a>
+    <span class="header-spacer"></span>
+    <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Language">
+      <button class="lang-btn" type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button class="lang-btn" type="button" data-lang="zh" aria-pressed="false">中文</button>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="wrap tabbar-inner">
+      <span class="tabbar-label" data-i18n="nav.products">Products</span>
+      <div class="tabs" role="tablist" data-i18n-aria="nav.products" aria-label="Products">
+        <button class="tab" type="button" role="tab" id="tab-cwick" aria-controls="panel-cwick" aria-selected="true" data-panel="panel-cwick">cwick</button>
+      </div>
+      <span class="tab-count" data-i18n="tab.count">1 product</span>
+    </div>
+  </div>
+  <div class="subtabs">
+    <div class="wrap subtabs-inner" role="tablist" data-i18n-aria="st.aria" aria-label="Sections">
+      <button class="subtab" type="button" role="tab" data-st="overview" aria-selected="true" data-i18n="st.overview">Overview</button>
+      <button class="subtab" type="button" role="tab" data-st="architecture" aria-selected="false" data-i18n="st.arch">Architecture &amp; APIs</button>
+      <button class="subtab" type="button" role="tab" data-st="models" aria-selected="false" data-i18n="st.models">Models &amp; performance</button>
+      <button class="subtab" type="button" role="tab" data-st="quickstart" aria-selected="false" data-i18n="st.quick">Quick start</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<div id="panel-cwick" role="tabpanel" aria-labelledby="tab-cwick" tabindex="-1">
+
+  <!-- ===== hero ===== -->
+  <section data-st="overview" id="overview" class="section hero" style="padding-top:clamp(40px,6vw,72px)">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="hero.eyebrow">Pure C · on-device inference engine</p>
+          <h1>cwick<span class="dot">.</span></h1>
+          <p class="hero-lead" data-i18n="hero.lead">Run the whole model, not a smaller one.</p>
+          <p class="hero-desc" data-i18n="hero.desc">A pure-C on-device inference engine running complete, never-pruned GLM-5.3-Flash, DeepSeek-V4.1-Flash-1017, MiniMax-M3.1-Flash and DeepSeek-V4-Pro-Qwen3.5-9B-UNCENSORED-heretic checkpoints — 18–475 GiB of weights — on one 128 GiB Apple Silicon Mac, with OpenAI-, Anthropic- and Systemone-compatible APIs.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/landpai/cwick" target="_blank" rel="noopener noreferrer"><span data-i18n="hero.cta.github">View on GitHub</span> ↗</a>
+            <a class="btn btn-ghost" href="#quickstart" data-go="quickstart"><span data-i18n="hero.cta.local">Quick start</span> →</a>
+          </div>
+          <p class="hero-meta">C11 · MIT · Apple Silicon · :8001</p>
+        </div>
+        <div class="hero-art">
+          <div class="art-chip top"><b>128</b> GiB <span data-i18n="hero.chip.machine">machine</span></div>
+          <img src="logo-mark.jpg" alt="Landapi cwick" data-i18n-alt="hero.art.alt">
+          <div class="art-chip bottom"><b>80%</b> <span data-i18n="hero.chip.ceiling">RAM ceiling</span></div>
+        </div>
+      </div>
+      <p class="art-caption"><strong data-i18n="hero.art.tag">Why the name</strong><span data-i18n="hero.art.caption">A wick lets a large body of wax burn: 233–475 GiB of weights sit on the SSD, and only a few gigabytes cross the bus for each token.</span></p>
+
+      <div class="stats" style="margin-top:clamp(36px,5vw,58px)">
+        <div class="stat"><div class="value">4</div><div class="label" data-i18n="stat1">checkpoints supported end to end</div></div>
+        <div class="stat"><div class="value long">233–475 GiB</div><div class="label" data-i18n="stat2">of weights streamed from the SSD</div></div>
+        <div class="stat"><div class="value">80%</div><div class="label" data-i18n="stat3">RAM ceiling, wired, swap stays flat</div></div>
+        <div class="stat"><div class="value">500K</div><div class="label" data-i18n="stat4">maximum context</div></div>
+        <div class="stat"><div class="value">3</div><div class="label" data-i18n="stat5">API dialects: chat · responses · messages</div></div>
+      </div>
+    </div>
+  </section>
+  <!-- ===== architecture ===== -->
+  <section data-st="architecture" id="architecture" class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow" data-i18n="s.arch.eyebrow">Under the hood</p>
+        <h2 data-i18n="s.arch">How a request flows</h2>
+        <p data-i18n="s.arch.sub">One server, one resident model, four checkpoint-specific backends. Generation is single-slot; everything else is served concurrently so a long prefill stays watchable.</p>
+      </div>
+      <div class="card arch">
+        <div class="arch-flow">
+          <div class="arch-box" data-i18n="arch.client">Client — curl, coding agent, desktop chat app, built-in console</div>
+          <div class="arch-arrow"></div>
+          <div class="arch-box accent">HTTP :8001 · server.c<small data-i18n="arch.queue">single-slot generation queue, arrival order</small></div>
+          <div class="arch-arrow"></div>
+          <div class="arch-backends">
+            <div class="backend"><b>GLM-5.3-Flash</b><span>spine.c · attention.c<br>moe.c · pfx.c</span></div>
+            <div class="backend"><b>DeepSeek-V4.1</b><span>ds_model.c · ds_ops.c<br>ds_quant.c</span></div>
+            <div class="backend"><b>MiniMax-M3.1</b><span>mm_model.c<br>mm_prompt.c</span></div>
+            <div class="backend"><b>DeepSeek-V4-Pro-Qwen3.5-9B-UNCENSORED-heretic</b><span>q35_model.c<br>q35_prompt.c · q35_gpu.m</span></div>
+          </div>
+        </div>
+        <div class="arch-side">
+          <div><code>/v1/systemone</code> → <span data-i18n="arch.side1">jev.c · one prefill, read the distribution</span></div>
+          <div><code>/v1/metrics</code> · <code>/v1/models</code> · <code>/v1/config</code> → <span data-i18n="arch.side2">answered while the slot is busy</span></div>
+          <div><code>/v1/hub/*</code> → <span data-i18n="arch.side3">hub.c · download jobs and the model catalog</span></div>
+          <div><code>/</code> → <span data-i18n="arch.side4">embedded console, two H5 apps, local models</span></div>
+        </div>
+        <div class="arch-state">
+          <h4 data-i18n="arch.state.title">State on this machine</h4>
+          <div class="state-grid">
+            <div><b data-i18n="arch.state1.t">Resident</b><span data-i18n="arch.state1">bf16 spine + KV cache + indexer pools, wired</span></div>
+            <div><b data-i18n="arch.state2.t">Experts</b><span data-i18n="arch.state2">pin cache in shared memory + direct SSD reads</span></div>
+            <div><b data-i18n="arch.state3.t">Snapshots</b><span data-i18n="arch.state3">pfx.c checkpoints under --prefix-cache-dir</span></div>
+            <div><b data-i18n="arch.state4.t">Compute</b><span data-i18n="arch.state4">pool.c (NEON threads) or metal.c (zero-copy arena)</span></div>
+          </div>
+        </div>
+        <p class="arch-note" data-i18n="arch.note">C11 plus three Objective-C files — two Metal bridges (metal_objc.m, q35_gpu.m) and a QR encoder. It links only macOS system frameworks — Accelerate, Metal, CoreImage, ImageIO, CoreGraphics — and the system sqlite3. No Python, no BLAS, no runtime conversion step. One binary, four subcommands: setup, run, serve, doctor.</p>
+      </div>
+    </div>
+  </section>
+  <!-- ===== API ===== -->
+  <section data-st="architecture" id="api" class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow" data-i18n="s.api.eyebrow">Interfaces</p>
+        <h2 data-i18n="s.api">API surface</h2>
+        <p data-i18n="s.api.sub">A short form of the server reference — auth, error shapes and the full endpoint list live in docs/SERVER.md.</p>
+      </div>
+      <div class="api-kinds">
+        <div class="card api-kind">
+          <span class="kind-tag">OpenAI</span>
+          <h3 data-i18n="k1.title">OpenAI-compatible</h3>
+          <p data-i18n="k1.body">Three generation dialects with streaming, tool calls and the same engine behind them; thinking is off by default unless the request sets it.</p>
+          <code>/v1/chat/completions · /v1/responses · /v1/completions · /v1/models</code>
+        </div>
+        <div class="card api-kind">
+          <span class="kind-tag">Anthropic</span>
+          <h3 data-i18n="k2.title">Anthropic-compatible</h3>
+          <p data-i18n="k2.body">Messages dialect: a top-level system field, content blocks and message_* stream events, including tool use.</p>
+          <code>/v1/messages</code>
+        </div>
+        <div class="card api-kind">
+          <span class="kind-tag">Systemone</span>
+          <h3 data-i18n="k3.title">Systemone decisions</h3>
+          <p data-i18n="k3.body">One prefill reads the answer-position distribution and returns choice, score or noul probabilities — typed decisions without retraining (requires --jev).</p>
+          <code>/v1/systemone</code>
+        </div>
+      </div>
+      <div class="api-tools">
+        <label class="api-search">
+          <span class="sr-only" data-i18n="api.search.label">Filter endpoints</span>
+          <input id="api-filter" type="search" placeholder="Filter endpoints…" data-i18n-placeholder="api.search.ph" autocomplete="off" spellcheck="false">
+        </label>
+        <span class="api-count" id="api-count" aria-live="polite"></span>
+      </div>
+      <div class="api-list" id="api-list">
+        <div class="api-row"><div><span class="method">GET</span> <span class="api-path">/v1/models</span><p data-i18n="a1">resident checkpoint and what is under ./models, with supported flags</p></div></div>
+        <div class="api-row"><div><span class="method post">POST</span> <span class="api-path">/v1/models/switch</span><p data-i18n="a11">validate first, then unload one checkpoint and map another; 409 while generating</p></div></div>
+        <div class="api-row"><div><span class="method post">POST</span> <span class="api-path">/v1/completions</span><p data-i18n="a12">raw text completion, streaming or not</p></div></div>
+        <div class="api-row"><div><span class="method post">POST</span> <span class="api-path">/v1/chat/completions</span><p data-i18n="a2">messages, stream, tools and reasoning_effort</p></div></div>
+        <div class="api-row"><div><span class="method post">POST</span> <span class="api-path">/v1/responses</span><p data-i18n="a3">Responses dialect: input items in, response.* events out</p></div></div>
+        <div class="api-row"><div><span class="method post">POST</span> <span class="api-path">/v1/messages</span><p data-i18n="a4">Anthropic dialect: system + content blocks, message_* stream</p></div></div>
+        <div class="api-row"><div><span class="method post">POST</span> <span class="api-path">/v1/systemone</span><p data-i18n="a5">typed decisions from one prefill (requires --jev)</p></div></div>
+        <div class="api-row"><div><span class="method">GET</span> <span class="api-path">/v1/metrics</span><p data-i18n="a6">vLLM-compatible names plus five host VM gauges; also /metrics and /health</p></div></div>
+        <div class="api-row"><div><span class="method">GET</span> <span class="api-path">/v1/hub/models</span><p data-i18n="a7">downloaded checkpoints with size and completeness</p></div></div>
+        <div class="api-row"><div><span class="method">GET</span> <span class="api-path">/v1/logs/stream</span><p data-i18n="a8">follow this process's stdout and stderr</p></div></div>
+        <div class="api-row"><div><span class="method post">POST</span> <span class="api-path">/v1/auth/login</span><p data-i18n="a9">password → Bearer token and HttpOnly session cookie</p></div></div>
+        <div class="api-row"><div><span class="method put">PUT</span> <span class="api-path">/v1/apps/&lt;id&gt;/state</span><p data-i18n="a10">per-app sqlite storage that survives a cleared browser</p></div></div>
+      </div>
+      <p class="api-empty" id="api-empty" hidden data-i18n="api.search.empty">No endpoint matches that filter.</p>
+      <p class="note" data-i18n="api.note">Generation is single-slot and requests queue in arrival order. Metrics, the model library, the log stream and the console stay answerable while a long prefill runs — that is what makes watching it possible at all.</p>
+    </div>
+  </section>
+  <!-- ===== models ===== -->
+  <section data-st="models" id="models" class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow" data-i18n="s.models.eyebrow">Checkpoints</p>
+        <h2 data-i18n="s.models">Four models, each with its own backend</h2>
+        <p data-i18n="s.models.sub">Not a closed list by design — but every checkpoint needs its own loader, quantizer, prompt renderer and kernels. Decode figures are measured on an M3 Max with 128 GiB and the Metal backend.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th data-i18n="th.model">Model</th><th data-i18n="th.disk">On disk</th><th data-i18n="th.shape">Shape</th>
+            <th data-i18n="th.ctx">Context</th><th data-i18n="th.decode">Decode</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td data-i18n-label="th.model"><b>GLM-5.3-Flash</b><span class="sub" data-i18n="m1.sub">≈320B parameters · the original model</span></td>
+              <td data-i18n-label="th.disk">≈306 GiB<span class="sub" data-i18n="m1.disk">62 shards</span></td>
+              <td data-i18n-label="th.shape" data-i18n="m1.shape">45 layers · 288 experts · top-8 · FP8-E4M3</td>
+              <td data-i18n-label="th.ctx">500K</td>
+              <td data-i18n-label="th.decode" data-i18n="m1.decode">3.6 tok/s resident</td>
+            </tr>
+            <tr>
+              <td data-i18n-label="th.model"><b>DeepSeek-V4.1-Flash-1017</b><span class="sub" data-i18n="m2.sub">largest one that still fits a laptop</span></td>
+              <td data-i18n-label="th.disk">≈475 GiB<span class="sub" data-i18n="m2.disk">48 shards</span></td>
+              <td data-i18n-label="th.shape" data-i18n="m2.shape">40 layers · 384 experts · top-6 · MLA + FP4</td>
+              <td data-i18n-label="th.ctx">500K</td>
+              <td data-i18n-label="th.decode">2.8 tok/s</td>
+            </tr>
+            <tr>
+              <td data-i18n-label="th.model"><b>MiniMax-M3.1-Flash</b><span class="sub" data-i18n="m3.sub">smallest footprint of the three MoEs</span></td>
+              <td data-i18n-label="th.disk">≈233 GiB<span class="sub" data-i18n="m3.disk">48 shards</span></td>
+              <td data-i18n-label="th.shape" data-i18n="m3.shape">60 layers (3 dense) · 128 experts · top-4 · NVFP4</td>
+              <td data-i18n-label="th.ctx">500K</td>
+              <td data-i18n-label="th.decode">1.48 tok/s</td>
+            </tr>
+            <tr>
+              <td data-i18n-label="th.model"><b>DeepSeek-V4-Pro-Qwen3.5-9B-UNCENSORED-heretic</b><span class="sub" data-i18n="m4.sub">dense, held wholly in RAM</span></td>
+              <td data-i18n-label="th.disk">≈18 GiB<span class="sub" data-i18n="m4.disk">4 shards</span></td>
+              <td data-i18n-label="th.shape" data-i18n="m4.shape">32 layers: 24 Gated DeltaNet + 8 GQA · dense BF16</td>
+              <td data-i18n-label="th.ctx">500K</td>
+              <td data-i18n-label="th.decode" data-i18n="m4.decode">20.4 tok/s on the GPU</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note" data-i18n="models.note">Context is not free: at 500K positions the KV cache, the resident spine and the expert bank all draw from the same 80% RAM ceiling. Every figure on this page is measured, not assumed.</p>
+    </div>
+  </section>
+  <!-- ===== quick start ===== -->
+  <section data-st="quickstart" id="quickstart" class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow" data-i18n="s.quick.eyebrow">Get it running</p>
+        <h2 data-i18n="s.quick">Three steps to a local API</h2>
+        <p data-i18n="s.quick.sub">No Python, no conversion, no package manager. The commands below are the same ones the README uses.</p>
+      </div>
+      <div class="steps">
+        <div class="card step">
+          <h3 data-i18n="q1.title">1 · Clone and build</h3>
+          <p data-i18n="q1.note">macOS on Apple Silicon and clang are the only prerequisites.</p>
+          <pre data-i18n="q1.code"></pre>
+        </div>
+        <div class="card step">
+          <h3 data-i18n="q2.title">2 · Start the server</h3>
+          <p data-i18n="q2.note">start.sh turns on the prefix cache, the web console, LAN sharing and a password in one command. Switching models later needs no restart: POST /v1/models/switch.</p>
+          <pre data-i18n="q2.code"></pre>
+        </div>
+        <div class="card step">
+          <h3 data-i18n="q3.title">3 · Send a request</h3>
+          <p data-i18n="q3.note">The example names glm-5.3-flash; GET /v1/models lists the id of whatever checkpoint is currently resident. Any OpenAI-compatible client works.</p>
+          <pre data-i18n="q3.code"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="footer-brand"><img src="logo-mark.jpg" alt="Landapi" data-i18n-alt="brand.alt"> Landapi</div>
+    <div class="footer-line" data-i18n="footer.line">cwick — a complete, never-pruned model on one Apple Silicon Mac.</div>
+    <div class="footer-links">
+      <a href="https://github.com/landpai/cwick" target="_blank" rel="noopener noreferrer" data-i18n="footer.github">GitHub</a>
+      <a href="https://github.com/landpai/cwick" target="_blank" rel="noopener noreferrer" data-i18n="footer.license">MIT License</a>
+      <a href="#main" data-i18n="footer.top">Top</a>
+    </div>
+    <div class="footer-copy" data-i18n="footer.copy">Landapi · cwick · page content mirrors the local working copy.</div>
+  </div>
+</footer>
+
+<noscript><div style="padding:16px;text-align:center;background:#fff8e6;color:#6b4e00;font-size:14px">Enable JavaScript to switch between English and 简体中文. / 启用 JavaScript 以切换中英文。</div></noscript>
+
+<script>
+(function () {
+  "use strict";
+
+  var I18N = {
+    en: {
+      "doc.title": `cwick | Run the whole model · Landapi`,
+      "meta.desc": `cwick by Landapi — a pure-C on-device engine for complete GLM-5.3-Flash, DeepSeek-V4.1-Flash-1017 and MiniMax-M3.1-Flash checkpoints on Apple Silicon Mac, with OpenAI-, Anthropic- and Systemone-compatible APIs.`,
+      "skip": `Skip to content`,
+      "brand.alt": `Landapi logo`,
+      "brand.sub": `On-device AI`,
+      "lang.label": `Language`,
+      "nav.products": `Products`,
+      "tab.count": `1 product`,
+
+      "hero.eyebrow": `Pure C · on-device inference engine`,
+      "hero.lead": `Run the whole model, not a smaller one.`,
+      "hero.desc": `A pure-C on-device inference engine running complete, never-pruned GLM-5.3-Flash, DeepSeek-V4.1-Flash-1017, MiniMax-M3.1-Flash and DeepSeek-V4-Pro-Qwen3.5-9B-UNCENSORED-heretic checkpoints — 18–475 GiB of weights — on one 128 GiB Apple Silicon Mac, with OpenAI-, Anthropic- and Systemone-compatible APIs.`,
+      "hero.cta.github": `View on GitHub`,
+      "hero.cta.local": `Quick start`,
+      "hero.art.alt": `Landapi cwick emblem`,
+      "hero.chip.machine": `machine`,
+      "hero.chip.ceiling": `RAM ceiling`,
+      "hero.art.tag": `Why the name`,
+      "hero.art.caption": `A wick lets a large body of wax burn: 233–475 GiB of weights sit on the SSD, and only a few gigabytes cross the bus for each token.`,
+      "stat1": `checkpoints supported end to end`,
+      "stat2": `of weights streamed from the SSD`,
+      "stat3": `RAM ceiling, wired, swap stays flat`,
+      "stat4": `maximum context`,
+      "stat5": `API dialects: chat · responses · messages`,
+
+
+      "s.arch.eyebrow": `Under the hood`,
+      "s.arch": `How a request flows`,
+      "s.arch.sub": `One server, one resident model, four checkpoint-specific backends. Generation is single-slot; everything else is served concurrently so a long prefill stays watchable.`,
+      "arch.client": `Client — curl, coding agent, desktop chat app, built-in console`,
+      "arch.queue": `single-slot generation queue, arrival order`,
+      "arch.side1": `jev.c · one prefill, read the distribution`,
+      "arch.side2": `answered while the slot is busy`,
+      "arch.side3": `hub.c · download jobs and the model catalog`,
+      "arch.side4": `embedded console, two H5 apps, local models`,
+      "arch.state.title": `State on this machine`,
+      "arch.state1.t": `Resident`,
+      "arch.state1": `bf16 spine + KV cache + indexer pools, wired`,
+      "arch.state2.t": `Experts`,
+      "arch.state2": `pin cache in shared memory + direct SSD reads`,
+      "arch.state3.t": `Snapshots`,
+      "arch.state3": `pfx.c checkpoints under --prefix-cache-dir`,
+      "arch.state4.t": `Compute`,
+      "arch.state4": `pool.c (NEON threads) or metal.c (zero-copy arena)`,
+      "arch.note": `C11 plus three Objective-C files — two Metal bridges (metal_objc.m, q35_gpu.m) and a QR encoder. It links only macOS system frameworks — Accelerate, Metal, CoreImage, ImageIO, CoreGraphics — and the system sqlite3. No Python, no BLAS, no runtime conversion step. One binary, four subcommands: setup, run, serve, doctor.`,
+
+      "s.models.eyebrow": `Checkpoints`,
+      "s.models": `Four models, each with its own backend`,
+      "s.models.sub": `Not a closed list by design — but every checkpoint needs its own loader, quantizer, prompt renderer and kernels. Decode figures are measured on an M3 Max with 128 GiB and the Metal backend.`,
+      "th.model": `Model`,
+      "th.disk": `On disk`,
+      "th.shape": `Shape`,
+      "th.ctx": `Context`,
+      "th.decode": `Decode`,
+      "m1.sub": `≈320B parameters · the original model`,
+      "m1.disk": `62 shards`,
+      "m1.shape": `45 layers · 288 experts · top-8 · FP8-E4M3`,
+      "m1.decode": `3.6 tok/s resident`,
+      "m2.sub": `largest one that still fits a laptop`,
+      "m2.disk": `48 shards`,
+      "m2.shape": `40 layers · 384 experts · top-6 · MLA + FP4`,
+      "m3.sub": `smallest footprint of the three MoEs`,
+      "m3.disk": `48 shards`,
+      "m3.shape": `60 layers (3 dense) · 128 experts · top-4 · NVFP4`,
+      "m4.sub": `dense, held wholly in RAM`,
+      "m4.disk": `4 shards`,
+      "m4.shape": `32 layers: 24 Gated DeltaNet + 8 GQA · dense BF16`,
+      "m4.decode": `20.4 tok/s on the GPU`,
+      "models.note": `Context is not free: at 500K positions the KV cache, the resident spine and the expert bank all draw from the same 80% RAM ceiling. Every figure on this page is measured, not assumed.`,
+
+
+
+      "s.quick.eyebrow": `Get it running`,
+      "s.quick": `Three steps to a local API`,
+      "s.quick.sub": `No Python, no conversion, no package manager. The commands below are the same ones the README uses.`,
+      "q1.title": `1 · Clone and build`,
+      "q1.note": `macOS on Apple Silicon and clang are the only prerequisites.`,
+      "q1.code": `<span class="cmd">git clone</span> https://github.com/landpai/cwick.git\n<span class="cmd">cd</span> cwick\n<span class="cmd">make</span> &amp;&amp; <span class="cmd">make test</span>          <span class="cm"># builds ./cwick, then runs the verification suite</span>`,
+      "q2.title": `2 · Start the server`,
+      "q2.note": `start.sh turns on the prefix cache, the web console, LAN sharing and a password in one command. Switching models later needs no restart: POST /v1/models/switch.`,
+      "q2.code": `<span class="cmd">sh ./start.sh</span> glm-5.3-flash   <span class="cm"># ≈306 GiB, 500K context, serves :8001</span>\n<span class="cm"># deepSeek-v4.1-flash-1017 · MiniMax-M3.1-Flash also work</span>`,
+      "q3.title": `3 · Send a request`,
+      "q3.note": `The example names glm-5.3-flash; GET /v1/models lists the id of whatever checkpoint is currently resident. Any OpenAI-compatible client works.`,
+      "q3.code": `TOKEN=$(\<span class="cmd">curl</span> -s localhost:8001/v1/auth/login -H <span class="str">'Content-Type: application/json'</span> \\\n  -d <span class="str">'{"password":"cwick-local"}'</span> | sed -n <span class="str">'s/.*"token":"\\([^"]*\\)".*/\\1/p'</span>)\n\n<span class="cmd">curl</span> -N localhost:8001/v1/chat/completions \\\n  -H <span class="str">"Authorization: Bearer $TOKEN"</span> -H <span class="str">'Content-Type: application/json'</span> \\\n  -d <span class="str">'{"model":"glm-5.3-flash","stream":true,"max_tokens":128,</span>\n<span class="str">       "messages":[{"role":"user","content":"Explain MoE routing in one paragraph."}]}'</span>`,
+
+      "s.api.eyebrow": `Interfaces`,
+      "s.api": `API surface`,
+      "s.api.sub": `A short form of the server reference — auth, error shapes and the full endpoint list live in docs/SERVER.md.`,
+      "a1": `resident checkpoint and what is under ./models, with supported flags`,
+      "a2": `messages, stream, tools and reasoning_effort`,
+      "a3": `Responses dialect: input items in, response.* events out`,
+      "a4": `Anthropic dialect: system + content blocks, message_* stream`,
+      "a5": `typed decisions from one prefill (requires --jev)`,
+      "a6": `vLLM-compatible names plus five host VM gauges; also /metrics and /health`,
+      "a7": `downloaded checkpoints with size and completeness`,
+      "a8": `follow this process's stdout and stderr`,
+      "a9": `password → Bearer token and HttpOnly session cookie`,
+      "a10": `per-app sqlite storage that survives a cleared browser`,
+      "a11": `validate first, then unload one checkpoint and map another; 409 while generating`,
+      "a12": `raw text completion, streaming or not`,
+      "api.note": `Generation is single-slot and requests queue in arrival order. Metrics, the model library, the log stream and the console stay answerable while a long prefill runs — that is what makes watching it possible at all.`,
+
+
+      "footer.line": `cwick — a complete, never-pruned model on one Apple Silicon Mac.`,
+      "footer.github": `GitHub`,
+      "footer.license": `MIT License`,
+      "footer.top": `Top`,
+      "k1.title": `OpenAI-compatible`,
+      "k1.body": `Three generation dialects with streaming, tool calls and the same engine behind them; thinking is off by default unless the request sets it.`,
+      "k2.title": `Anthropic-compatible`,
+      "k2.body": `Messages dialect: a top-level system field, content blocks and message_* stream events, including tool use.`,
+      "k3.title": `Systemone decisions`,
+      "k3.body": `One prefill reads the answer-position distribution and returns choice, score or noul probabilities — typed decisions without retraining (requires --jev).`,
+      "st.aria": `Sections`,
+      "st.overview": `Overview`,
+      "st.arch": `Architecture & APIs`,
+      "st.models": `Models & performance`,
+      "st.quick": `Quick start`,
+      "footer.copy": `Landapi · cwick · page content mirrors the local working copy.`,
+
+      "copy.label": `Copy`,
+      "copy.done": `Copied`,
+      "copy.fail": `Selected — copy manually`,
+      "copy.aria": `Copy this code block`,
+      "api.search.label": `Filter endpoints`,
+      "api.search.ph": `Filter by method, path or description…`,
+      "api.search.empty": `No endpoint matches that filter.`,
+      "api.count": `{shown} / {total} endpoints`,
+    },
+
+    zh: {
+      "doc.title": `cwick | 跑完整的大模型 · Landapi`,
+      "meta.desc": `Landapi 旗下 cwick —— 纯 C 端侧推理引擎，在 Apple Silicon Mac 上运行完整的 GLM-5.3-Flash、DeepSeek-V4.1-Flash-1017 与 MiniMax-M3.1-Flash，提供兼容 OpenAI / Anthropic / Systemone 的接口。`,
+      "skip": `跳到正文`,
+      "brand.alt": `Landapi 标志`,
+      "brand.sub": `端侧推理`,
+      "lang.label": `语言`,
+      "nav.products": `产品`,
+      "tab.count": `1 款产品`,
+
+      "hero.eyebrow": `纯 C · 端侧推理引擎`,
+      "hero.lead": `跑完整的大模型，而不是更小的那个。`,
+      "hero.desc": `纯 C 端侧推理引擎，在单台 128 GiB Apple Silicon Mac 上运行完整、未剪枝的 GLM-5.3-Flash、DeepSeek-V4.1-Flash-1017、MiniMax-M3.1-Flash 与 DeepSeek-V4-Pro-Qwen3.5-9B-UNCENSORED-heretic（18–475 GiB 权重），提供 OpenAI / Anthropic / Systemone 兼容接口。`,
+      "hero.cta.github": `在 GitHub 查看`,
+      "hero.cta.local": `快速开始`,
+      "hero.art.alt": `Landapi cwick 徽标`,
+      "hero.chip.machine": `机器内存`,
+      "hero.chip.ceiling": `内存上限`,
+      "hero.art.tag": `名字的由来`,
+      "hero.art.caption": `灯芯是让一大块蜡持续燃烧的那根细线：233–475 GiB 权重留在 SSD 上，每个 token 真正过总线的只有几 GB。`,
+      "stat1": `端到端支持的 checkpoint`,
+      "stat2": `从 SSD 流式读取的权重`,
+      "stat3": `内存上限，wired 且 swap 保持平`,
+      "stat4": `最大上下文`,
+      "stat5": `API 方言：chat · responses · messages`,
+
+
+      "s.arch.eyebrow": `内部实现`,
+      "s.arch": `一次请求怎么走`,
+      "s.arch.sub": `一个服务端、一个常驻模型、四套按 checkpoint 定制的后端。生成是单槽的，其余请求并发应答——所以一次很长的 prefill 也能被看着跑完。`,
+      "arch.client": `客户端 —— curl、编程 Agent、桌面聊天应用、内置控制台`,
+      "arch.queue": `单槽生成队列，按到达顺序`,
+      "arch.side1": `jev.c · 一次 prefill，读答案位置的分布`,
+      "arch.side2": `槽位忙时照样应答`,
+      "arch.side3": `hub.c · 下载任务与模型目录`,
+      "arch.side4": `内嵌控制台、两个 H5 应用、本地模型`,
+      "arch.state.title": `这台机器上的状态`,
+      "arch.state1.t": `常驻`,
+      "arch.state1": `bf16 spine + KV 缓存 + 索引器池，wired`,
+      "arch.state2.t": `专家`,
+      "arch.state2": `共享内存里的 pin 缓存 + SSD 直读`,
+      "arch.state3.t": `快照`,
+      "arch.state3": `pfx.c 写在 --prefix-cache-dir 的 checkpoint`,
+      "arch.state4.t": `计算`,
+      "arch.state4": `pool.c（NEON 线程池）或 metal.c（零拷贝 arena）`,
+      "arch.note": `C11，外加三个 Objective-C 文件：两个 Metal 桥（metal_objc.m、q35_gpu.m）与一个二维码编码器。只链接 macOS 系统框架——Accelerate、Metal、CoreImage、ImageIO、CoreGraphics——以及系统自带的 sqlite3。没有 Python、没有 BLAS、没有运行期转换。一个二进制、四个子命令：setup、run、serve、doctor。`,
+
+      "s.models.eyebrow": `适配模型`,
+      "s.models": `四个模型，各有自己的后端`,
+      "s.models.sub": `不是设计上封闭的清单——但每个 checkpoint 都要有自己的加载器、反量化、模板渲染与内核。decode 数字来自 M3 Max、128 GiB、Metal 后端实测。`,
+      "th.model": `模型`,
+      "th.disk": `磁盘占用`,
+      "th.shape": `结构`,
+      "th.ctx": `上下文`,
+      "th.decode": `decode`,
+      "m1.sub": `≈320B 参数 · 最初的模型`,
+      "m1.disk": `62 分片`,
+      "m1.shape": `45 层 · 288 专家 · top-8 · FP8-E4M3`,
+      "m1.decode": `3.6 tok/s（专家常驻）`,
+      "m2.sub": `仍能进笔记本的最大一个`,
+      "m2.disk": `48 分片`,
+      "m2.shape": `40 层 · 384 专家 · top-6 · MLA + FP4`,
+      "m3.sub": `三个 MoE 里占用最小`,
+      "m3.disk": `48 分片`,
+      "m3.shape": `60 层（3 层稠密）· 128 专家 · top-4 · NVFP4`,
+      "m4.sub": `稠密模型，整份常驻内存`,
+      "m4.disk": `4 分片`,
+      "m4.shape": `32 层：24 层 Gated DeltaNet + 8 层 GQA · 稠密 BF16`,
+      "m4.decode": `20.4 tok/s（GPU）`,
+      "models.note": `上下文不免费：500K 位置的 KV 缓存、常驻主干与专家库都从同一个 80% 内存上限里出。本页每个数字都是量出来的，不是拍脑袋。`,
+
+
+
+      "s.quick.eyebrow": `跑起来`,
+      "s.quick": `三步得到一个本地 API`,
+      "s.quick.sub": `没有 Python、没有转换步骤、没有包管理器。下面的命令与 README 里用的是同一套。`,
+      "q1.title": `1 · 克隆并构建`,
+      "q1.note": `前置条件只有 macOS（Apple Silicon）和 clang。`,
+      "q1.code": `<span class="cmd">git clone</span> https://github.com/landpai/cwick.git\n<span class="cmd">cd</span> cwick\n<span class="cmd">make</span> &amp;&amp; <span class="cmd">make test</span>          <span class="cm"># 编译出 ./cwick，再跑验证套件</span>`,
+      "q2.title": `2 · 启动服务`,
+      "q2.note": `start.sh 一条命令打开前缀缓存、web 控制台、局域网分享与密码。之后换模型不需要重启：POST /v1/models/switch。`,
+      "q2.code": `<span class="cmd">sh ./start.sh</span> glm-5.3-flash   <span class="cm"># ≈306 GiB，500K 上下文，服务 :8001</span>\n<span class="cm"># 也可用 deepSeek-v4.1-flash-1017 · MiniMax-M3.1-Flash</span>`,
+      "q3.title": `3 · 发起一次调用`,
+      "q3.note": `示例里写的是 glm-5.3-flash；GET /v1/models 会列出当前常驻 checkpoint 的 id。任何 OpenAI 兼容客户端都能接。`,
+      "q3.code": `TOKEN=$(\<span class="cmd">curl</span> -s localhost:8001/v1/auth/login -H <span class="str">'Content-Type: application/json'</span> \\\n  -d <span class="str">'{"password":"cwick-local"}'</span> | sed -n <span class="str">'s/.*"token":"\\([^"]*\\)".*/\\1/p'</span>)\n\n<span class="cmd">curl</span> -N localhost:8001/v1/chat/completions \\\n  -H <span class="str">"Authorization: Bearer $TOKEN"</span> -H <span class="str">'Content-Type: application/json'</span> \\\n  -d <span class="str">'{"model":"glm-5.3-flash","stream":true,"max_tokens":128,</span>\n<span class="str">       "messages":[{"role":"user","content":"Explain MoE routing in one paragraph."}]}'</span>`,
+
+      "s.api.eyebrow": `接口`,
+      "s.api": `API 一览`,
+      "s.api.sub": `这是服务端参考的简版——鉴权规则、错误结构与完整端点清单在 docs/SERVER.md。`,
+      "a1": `常驻 checkpoint 与 ./models 下的模型，带 supported 标记`,
+      "a2": `messages、stream、tools 与 reasoning_effort`,
+      "a3": `Responses 方言：input 进，response.* 事件出`,
+      "a4": `Anthropic 方言：system + content blocks，message_* 流`,
+      "a5": `一次 prefill 读出类型化决策（需 --jev）`,
+      "a6": `vLLM 兼容命名 + 5 个主机级 VM 指标；同样支持 /metrics 与 /health`,
+      "a7": `已下载 checkpoint 的大小与完整性`,
+      "a8": `实时跟随本进程的 stdout 与 stderr`,
+      "a9": `密码换 Bearer token 与 HttpOnly 会话 cookie`,
+      "a10": `每个应用独立的 sqlite 存储，清浏览器数据也不会丢`,
+      "a11": `先校验，再卸载一个 checkpoint 并装载另一个；生成中返回 409`,
+      "a12": `原始文本补全，支持流式`,
+      "api.note": `生成是单槽的，请求按到达顺序排队，每个都会被服务完。metrics、模型库、日志流与控制台在长 prefill 期间照常应答——这正是「能看着它跑完」的前提。`,
+
+
+      "footer.line": `cwick —— 在一台 Apple Silicon Mac 上跑完整、未剪枝的大模型。`,
+      "footer.github": `GitHub`,
+      "footer.license": `MIT 协议`,
+      "footer.top": `顶部`,
+      "k1.title": `OpenAI 兼容`,
+      "k1.body": `三种生成方言共用同一套引擎，支持流式输出与工具调用；不传思考字段时默认关闭思考。`,
+      "k2.title": `Anthropic 兼容`,
+      "k2.body": `messages 方言：顶层 system 字段、content blocks 与 message_* 流事件，包含工具调用。`,
+      "k3.title": `Systemone 决策接口`,
+      "k3.body": `一次 prefill 读取答案位置的分布，返回 choice / score / noul 概率——无需重训即可得到类型化决策（需 --jev）。`,
+      "st.aria": `页面分区`,
+      "st.overview": `概述`,
+      "st.arch": `架构与 API`,
+      "st.models": `模型与性能`,
+      "st.quick": `快速开始`,
+      "footer.copy": `Landapi · cwick · 页面内容与本地工作副本一致。`,
+
+      "copy.label": `复制`,
+      "copy.done": `已复制`,
+      "copy.fail": `已选中，请手动复制`,
+      "copy.aria": `复制这段代码`,
+      "api.search.label": `筛选端点`,
+      "api.search.ph": `按方法、路径或说明筛选…`,
+      "api.search.empty": `没有匹配的端点。`,
+      "api.count": `{shown} / {total} 个端点`,
+    }
+  };
+
+  var lang = "en";
+  try {
+    var queryLang = new URLSearchParams(window.location.search).get("lang");
+    var saved = localStorage.getItem("landapi-lang");
+    lang = (queryLang === "en" || queryLang === "zh") ? queryLang
+      : (saved === "en" || saved === "zh") ? saved
+      : (/^zh/i.test(navigator.language || "") ? "zh" : "en");
+  } catch (e) { lang = /^zh/i.test(navigator.language || "") ? "zh" : "en"; }
+
+  function t(key) {
+    var d = I18N[lang] || I18N.en;
+    if (Object.prototype.hasOwnProperty.call(d, key)) return d[key];
+    if (Object.prototype.hasOwnProperty.call(I18N.en, key)) return I18N.en[key];
+    return key;
+  }
+
+  // The language is part of the shareable URL: a link to ?lang=zh opens in
+  // Chinese, and switching language updates the address bar without reloading.
+  function syncUrl() {
+    try {
+      var u = new URL(window.location.href);
+      if (u.searchParams.get("lang") === lang) return;
+      u.searchParams.set("lang", lang);
+      window.history.replaceState(null, "", u.pathname + u.search + u.hash);
+    } catch (e) { /* file:// and locked-down contexts keep the plain URL */ }
+  }
+
+  function applyApiFilter() {
+    var input = document.getElementById("api-filter");
+    var list = document.getElementById("api-list");
+    if (!input || !list) return;
+    var rows = list.querySelectorAll(".api-row");
+    var q = input.value.trim().toLowerCase();
+    var shown = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var hit = !q || rows[i].textContent.toLowerCase().indexOf(q) !== -1;
+      rows[i].hidden = !hit;
+      if (hit) shown++;
+    }
+    var count = document.getElementById("api-count");
+    if (count) count.textContent = t("api.count")
+      .replace("{shown}", String(shown)).replace("{total}", String(rows.length));
+    var empty = document.getElementById("api-empty");
+    if (empty) empty.hidden = shown !== 0;
+  }
+
+  // navigator.clipboard needs a secure context; a plain file:// preview does
+  // not have one, so fall back to the old selection-based copy.
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:-9999px;opacity:0";
+    document.body.appendChild(ta);
+    var ok = false;
+    try { ta.select(); ok = document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function flashCopy(btn, ok) {
+    btn.textContent = ok ? t("copy.done") : t("copy.fail");
+    if (ok) btn.classList.add("done");
+    setTimeout(function () {
+      btn.textContent = t("copy.label");
+      btn.classList.remove("done");
+    }, 1800);
+  }
+
+  // If neither clipboard path works (locked-down browsers, headless previews),
+  // select the block itself so a manual Cmd/Ctrl+C still gets the exact text.
+  function selectPre(pre) {
+    try {
+      var sel = window.getSelection();
+      if (!sel) return;
+      var range = document.createRange();
+      range.selectNodeContents(pre);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (e) {}
+  }
+
+  function fallbackCopy(pre, btn) {
+    var ok = legacyCopy(pre.textContent);
+    if (!ok) selectPre(pre);
+    flashCopy(btn, ok);
+  }
+
+  function copyBlock(pre, btn) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(pre.textContent).then(
+        function () { flashCopy(btn, true); },
+        function () { fallbackCopy(pre, btn); }
+      );
+    } else {
+      fallbackCopy(pre, btn);
+    }
+  }
+
+  function buildCopyButtons() {
+    var blocks = document.querySelectorAll("pre[data-i18n]");
+    for (var i = 0; i < blocks.length; i++) {
+      (function (pre) {
+        var wrap = document.createElement("div");
+        wrap.className = "code-wrap has-copy";
+        pre.parentNode.insertBefore(wrap, pre);
+        wrap.appendChild(pre);
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "copy-btn";
+        btn.setAttribute("data-i18n", "copy.label");
+        btn.setAttribute("data-i18n-aria", "copy.aria");
+        btn.textContent = t("copy.label");
+        btn.setAttribute("aria-label", t("copy.aria"));
+        btn.addEventListener("click", function () { copyBlock(pre, btn); });
+        wrap.insertBefore(btn, pre);
+      })(blocks[i]);
+    }
+  }
+
+  function apply() {
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    document.title = t("doc.title");
+    var meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", t("meta.desc"));
+
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].innerHTML = t(nodes[i].getAttribute("data-i18n"));
+
+    var attrs = [
+      ["data-i18n-alt", "alt"],
+      ["data-i18n-aria", "aria-label"],
+      ["data-i18n-title", "title"],
+      ["data-i18n-label", "data-label"],
+      ["data-i18n-placeholder", "placeholder"]
+    ];
+    attrs.forEach(function (pair) {
+      var list = document.querySelectorAll("[" + pair[0] + "]");
+      for (var j = 0; j < list.length; j++) list[j].setAttribute(pair[1], t(list[j].getAttribute(pair[0])));
+    });
+
+    var btns = document.querySelectorAll(".lang-btn");
+    for (var k = 0; k < btns.length; k++)
+      btns[k].setAttribute("aria-pressed", String(btns[k].getAttribute("data-lang") === lang));
+
+    var ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute("content", t("doc.title"));
+    var ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute("content", t("meta.desc"));
+    var copied = document.querySelectorAll(".copy-btn.done");
+    for (var c = 0; c < copied.length; c++) copied[c].classList.remove("done");
+
+    applyApiFilter();
+    syncHeader();
+    syncUrl();
+    try { localStorage.setItem("landapi-lang", lang); } catch (e) {}
+  }
+
+  // The sticky header's real height changes with language and font metrics;
+  // the skip link's scroll offset follows it.
+  function syncHeader() {
+    var header = document.querySelector(".site-header");
+    if (header) document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px");
+  }
+  window.addEventListener("resize", syncHeader);
+  window.addEventListener("load", syncHeader);
+
+  var reduceMotion = window.matchMedia
+    ? window.matchMedia("(prefers-reduced-motion:reduce)") : { matches: false };
+
+  /* Cards fade in and rise on first paint, and again whenever their section
+     is shown. The class carries only an animation: with scripting off, or
+     with motion disabled, every card is simply visible. */
+  function initRise() {
+    var groups = [".stats", ".arch-backends", ".arch-side", ".state-grid",
+                  ".api-kinds", ".api-list", ".steps"];
+    groups.forEach(function (sel) {
+      var box = document.querySelector(sel);
+      if (!box) return;
+      [].slice.call(box.children).forEach(function (el, i) {
+        el.classList.add("rise");
+        el.style.setProperty("--rise-i", String(i));
+      });
+    });
+    var singles = [".card.arch", ".hero-art", ".art-caption", ".section-head"];
+    singles.forEach(function (sel) {
+      var nodes = document.querySelectorAll(sel);
+      for (var i = 0; i < nodes.length; i++) {
+        nodes[i].classList.add("rise");
+        nodes[i].style.setProperty("--rise-i", String(Math.min(i, 3)));
+      }
+    });
+  }
+
+  var riseGuard = null;
+  function armRiseGuard() {
+    if (riseGuard) clearTimeout(riseGuard);
+    riseGuard = setTimeout(function () {
+      [].slice.call(document.querySelectorAll(".rise:not(.rise-ended)"))
+        .forEach(function (c) { c.classList.add("rise-ended"); });
+    }, 1400);
+  }
+  function replayRise(section) {
+    var cards = [].slice.call(section.querySelectorAll(".rise"));
+    if (!cards.length) return;
+    cards.forEach(function (c) { c.classList.remove("rise", "rise-ended"); });
+    void section.offsetWidth;
+    cards.forEach(function (c) { c.classList.add("rise"); });
+    armRiseGuard();
+  }
+
+  var fadeTargets = [];
+  var fadeGuard = null;
+  function pulseFade() {
+    if (reduceMotion.matches) return;
+    if (!fadeTargets.length) {
+      fadeTargets = ["#panel-cwick", ".tabbar-inner", ".subtabs-inner", ".footer-inner"]
+        .map(function (sel) { return document.querySelector(sel); })
+        .filter(function (n) { return !!n; });
+    }
+    fadeTargets.forEach(function (n) { n.classList.remove("lang-fade"); });
+    void document.body.offsetWidth;
+    fadeTargets.forEach(function (n) { n.classList.add("lang-fade"); });
+    /* A frozen clock would otherwise hold the panel at 30% opacity. */
+    if (fadeGuard) clearTimeout(fadeGuard);
+    fadeGuard = setTimeout(function () {
+      fadeTargets.forEach(function (n) { n.classList.remove("lang-fade"); });
+    }, 700);
+  }
+
+  /* Move the reading position into the freshly shown content. */
+  function focusContent() {
+    var panel = document.getElementById("panel-cwick");
+    if (!panel) return;
+    var shown = null;
+    for (var i = 0; i < panel.children.length; i++) {
+      var c = panel.children[i];
+      if (c.nodeType === 1 && c.hasAttribute("data-st") && !c.hidden) { shown = c; break; }
+    }
+    var target = shown ? (shown.querySelector("h1,h2") || shown) : panel;
+    if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+    var x = window.pageXOffset, y = window.pageYOffset;
+    try { target.focus({ preventScroll: true }); }
+    catch (e) { try { target.focus(); } catch (e2) {} }
+    try {
+      if (window.pageXOffset !== x || window.pageYOffset !== y) window.scrollTo(x, y);
+    } catch (e3) {}
+  }
+
+  document.querySelectorAll(".lang-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      lang = btn.getAttribute("data-lang") === "zh" ? "zh" : "en";
+      apply();
+      pulseFade();
+      focusContent();
+    });
+  });
+
+  // main product tab
+  document.querySelectorAll('.tabs [role="tab"]').forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll('.tabs [role="tab"]').forEach(function (other) {
+        other.setAttribute("aria-selected", String(other === tab));
+      });
+      document.querySelectorAll('[role="tabpanel"]').forEach(function (panel) {
+        panel.hidden = panel.id !== tab.getAttribute("data-panel");
+      });
+    });
+    tab.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); tab.click(); }
+    });
+  });
+
+  // copy buttons and endpoint filter are progressive enhancements: without
+  // JavaScript the page still shows every code block and every endpoint.
+  buildCopyButtons();
+  initRise();
+  var apiFilter = document.getElementById("api-filter");
+  if (apiFilter) apiFilter.addEventListener("input", applyApiFilter);
+  if (apiFilter && "addEventListener" in apiFilter)
+    apiFilter.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") { apiFilter.value = ""; applyApiFilter(); }
+    });
+
+  // Four sub-tabs are plain panels: clicking one shows only that topic's
+  // sections. The selection is mirrored into the URL anchor, and a hash
+  // arriving from a link, the address bar or the Back button selects the
+  // matching tab, so the tab and its anchor always agree.
+  var stButtons = [].slice.call(document.querySelectorAll(".subtab"));
+  var stInner = document.querySelector(".subtabs-inner");
+  var stSections = [].slice.call(document.querySelectorAll("#panel-cwick > section[data-st]"));
+  var ST_IDS = ["overview", "architecture", "models", "quickstart"];
+  var ST_ALIAS = { api: "architecture" };
+  var currentSt = null;
+  function bringSubtabIntoView(btn) {
+    if (!stInner || stInner.scrollWidth <= stInner.clientWidth + 2) return;
+    var a = btn.getBoundingClientRect(), b = stInner.getBoundingClientRect();
+    var dx = 0;
+    if (a.left < b.left + 10) dx = a.left - b.left - 14;
+    else if (a.right > b.right - 10) dx = a.right - b.right + 14;
+    /* Set scrollLeft synchronously: a smooth animation may never advance
+       in a backgrounded tab, leaving the active tab off-screen. */
+    if (dx) stInner.scrollLeft += dx;
+  }
+  function selectSt(id) {
+    currentSt = id;
+    var active = null;
+    stButtons.forEach(function (b) {
+      var on = b.getAttribute("data-st") === id;
+      b.setAttribute("aria-selected", String(on));
+      if (on) active = b;
+    });
+    stSections.forEach(function (sec) {
+      sec.hidden = sec.getAttribute("data-st") !== id;
+    });
+    stSections.forEach(function (sec) { if (!sec.hidden) replayRise(sec); });
+    if (active) bringSubtabIntoView(active);
+  }
+  function hashToSt() {
+    var h = "";
+    try { h = decodeURIComponent(window.location.hash.replace(/^#/, "")); } catch (e) {}
+    if (ST_IDS.indexOf(h) >= 0) return h;
+    return Object.prototype.hasOwnProperty.call(ST_ALIAS, h) ? ST_ALIAS[h] : null;
+  }
+  function setStHash(id) {
+    try {
+      var u = new URL(window.location.href);
+      if (u.hash === "#" + id) return;
+      u.hash = id;
+      window.history.pushState(null, "", u.pathname + u.search + u.hash);
+    } catch (e) {
+      try { window.location.hash = id; } catch (e2) {}
+    }
+  }
+  function navigateSt(id, fromHash) {
+    if (ST_IDS.indexOf(id) < 0) id = "overview";
+    if (fromHash && id === currentSt) return;
+    selectSt(id);
+    if (!fromHash) setStHash(id);
+    try { window.scrollTo(0, 0); } catch (e) {}
+    focusContent();
+  }
+  window.addEventListener("hashchange", function () {
+    var id = hashToSt();
+    if (id) navigateSt(id, true);
+  });
+  window.addEventListener("popstate", function () {
+    var id = hashToSt();
+    if (id) { navigateSt(id, true); return; }
+    var raw = "";
+    try { raw = window.location.hash.replace(/^#/, ""); } catch (e) {}
+    if (!raw && currentSt !== "overview") {
+      selectSt("overview");
+      try { window.scrollTo(0, 0); } catch (e2) {}
+    }
+  });
+  stButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () { navigateSt(btn.getAttribute("data-st"), false); });
+    btn.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); btn.click(); }
+    });
+  });
+  document.querySelectorAll("[data-go]").forEach(function (el) {
+    el.addEventListener("click", function (ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      navigateSt(el.getAttribute("data-go"), false);
+    });
+  });
+  selectSt(hashToSt() || "overview");
+
+  apply();
+})();
+</script>
+</body>
+</html>

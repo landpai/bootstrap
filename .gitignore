@@ -1,0 +1,51 @@
+# ---------------------------------------------------------------------------
+# Landapi site / bootstrap — only the publishable page goes to the remote.
+#
+# Tracked:  index.html      the complete single-page site (inline CSS + JS)
+#           logo-mark.jpg   the cropped brand mark the page actually loads
+#           .gitignore      this file
+#
+# Everything below is local working material: the source artwork, the working
+# spec, one-off verification probes, and machine-generated cruft. The files
+# stay on disk; these rules only keep them out of the published repository.
+# ---------------------------------------------------------------------------
+
+# Working spec: requirements and internal wording, not part of the site.
+/site.md
+
+# Uncropped 2048px source artwork (it still carries a generator watermark).
+# The page references only logo-mark.jpg; re-deriving it is a local step.
+/logo.jpg
+
+# One-off probes, screenshots and copied page variants used while checking
+# layout in a browser. All of them are named with a leading underscore.
+/_*.html
+/_*/
+_*.png
+*.tmp
+
+# OS / editor cruft
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*~
+*.bak
+*.orig
+.idea/
+.vscode/
+
+# Local preview / build output, if a bundler or static server is ever added
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+*.map
+*.log
+
+# Local configuration and credentials
+.env
+.env.*
+*.pem
+*.key

@@ -3,6 +3,8 @@
 #
 # Tracked:  index.html      the complete single-page site (inline CSS + JS)
 #           logo-mark.jpg   the cropped brand mark the page actually loads
+#           qrcode.jpg      the WeChat QR shown from the footer
+#           LICENSE         the MIT license text
 #           .gitignore      this file
 #
 # Everything below is local working material: the source artwork, the working

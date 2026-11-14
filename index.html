@@ -242,6 +242,33 @@
   .footer-links{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;font-weight:650}
   .footer-copy{width:100%;color:var(--muted);font-size:11.5px;border-top:1px solid var(--line);padding-top:16px;margin-top:6px}
 
+
+  /* ---------- footer: WeChat QR ---------- */
+  .wechat{position:relative;display:inline-flex;align-items:center;margin-left:auto}
+  .wechat-trigger{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;
+    border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--teal);
+    font-family:inherit;appearance:none;font-size:13px;font-weight:650;line-height:1.4;cursor:pointer}
+  .wechat-trigger svg{width:15px;height:15px;flex:0 0 auto;fill:currentColor}
+  .wechat-trigger:hover,.wechat-trigger[aria-expanded="true"]{
+    border-color:#bfe9ef;color:var(--teal-bright);background:var(--teal-soft)}
+  .wechat-pop{position:absolute;right:0;bottom:calc(100% + 12px);z-index:70;
+    width:min(212px,calc(100vw - 36px));padding:14px 14px 12px;
+    background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-hover);
+    text-align:center;opacity:0;visibility:hidden;pointer-events:none;
+    transform:translateY(10px) scale(.97);transform-origin:bottom right}
+  /* Visibility is switched by the class alone. Neither a transition nor an
+     entrance keyframe may own it: with a frozen animation clock (background
+     tab, headless render) the panel would be stranded at its invisible or
+     half-transparent start frame. The page's other animations are decorative;
+     this one state is functional. */
+  .wechat.open .wechat-pop{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+  .wechat-pop::after{content:"";position:absolute;right:26px;bottom:-7px;width:12px;height:12px;
+    background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+    transform:rotate(45deg)}
+  .wechat-pop img{display:block;width:100%;max-width:184px;height:auto;margin:0 auto 10px;border-radius:8px}
+  .wechat-pop b{display:block;font-size:13px;color:var(--ink)}
+  .wechat-pop span{display:block;margin-top:3px;font-size:11.5px;color:var(--muted)}
+
   /* ---------- copyable code ---------- */
   .code-wrap{position:relative;min-width:0}
   .code-wrap.has-copy pre{padding-top:46px}
@@ -660,6 +687,19 @@
       <a href="https://github.com/landpai/cwick" target="_blank" rel="noopener noreferrer" data-i18n="footer.license">MIT License</a>
       <a href="#main" data-i18n="footer.top">Top</a>
     </div>
+    <div class="wechat">
+      <button class="wechat-trigger" type="button" id="wechat-btn" aria-expanded="false"
+              aria-controls="wechat-pop" data-i18n-aria="wechat.aria" aria-label="Show the WeChat QR code">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z"/></svg>
+        <span data-i18n="wechat.label">WeChat</span>
+      </button>
+      <div class="wechat-pop" id="wechat-pop" role="group" data-i18n-aria="wechat.pop.aria"
+           aria-label="WeChat QR code" aria-hidden="true">
+        <img src="qrcode.jpg" alt="Landapi WeChat QR code" width="184" height="184" data-i18n-alt="wechat.qr.alt">
+        <b data-i18n="wechat.pop.title">Scan to follow</b>
+        <span data-i18n="wechat.pop.hint">WeChat · Landapi</span>
+      </div>
+    </div>
     <div class="footer-copy" data-i18n="footer.copy">Landapi · cwick · page content mirrors the local working copy.</div>
   </div>
 </footer>
@@ -779,6 +819,12 @@
       "footer.github": `GitHub`,
       "footer.license": `MIT License`,
       "footer.top": `Top`,
+      "wechat.label": `WeChat`,
+      "wechat.aria": `Show the WeChat QR code`,
+      "wechat.pop.aria": `WeChat QR code`,
+      "wechat.qr.alt": `Landapi WeChat QR code`,
+      "wechat.pop.title": `Scan to follow`,
+      "wechat.pop.hint": `WeChat · Landapi`,
       "k1.title": `OpenAI-compatible`,
       "k1.body": `Three generation dialects with streaming, tool calls and the same engine behind them; thinking is off by default unless the request sets it.`,
       "k2.title": `Anthropic-compatible`,
@@ -910,6 +956,12 @@
       "footer.github": `GitHub`,
       "footer.license": `MIT 协议`,
       "footer.top": `顶部`,
+      "wechat.label": `公众号`,
+      "wechat.aria": `显示公众号二维码`,
+      "wechat.pop.aria": `公众号二维码`,
+      "wechat.qr.alt": `Landapi 公众号二维码`,
+      "wechat.pop.title": `扫码关注`,
+      "wechat.pop.hint": `微信 · Landapi`,
       "k1.title": `OpenAI 兼容`,
       "k1.body": `三种生成方言共用同一套引擎，支持流式输出与工具调用；不传思考字段时默认关闭思考。`,
       "k2.title": `Anthropic 兼容`,
@@ -1303,6 +1355,43 @@
     });
   });
   selectSt(hashToSt() || "overview");
+
+  /* Footer QR: a pointer hover previews it, a click pins it (touch and
+     keyboard), and clicking outside or Escape always dismisses. aria-hidden
+     follows the same state as the CSS visibility. */
+  (function () {
+    var box = document.querySelector(".wechat");
+    var btn = document.getElementById("wechat-btn");
+    var pop = document.getElementById("wechat-pop");
+    if (!box || !btn || !pop) return;
+    var pinned = false;
+    function show(on) {
+      box.classList.toggle("open", !!on);
+      btn.setAttribute("aria-expanded", String(!!on));
+      pop.setAttribute("aria-hidden", String(!on));
+    }
+    box.addEventListener("pointerenter", function (ev) {
+      if (ev.pointerType && ev.pointerType !== "mouse") return;
+      show(true);
+    });
+    box.addEventListener("pointerleave", function (ev) {
+      if (ev.pointerType && ev.pointerType !== "mouse") return;
+      if (!pinned) show(false);
+    });
+    btn.addEventListener("click", function () {
+      pinned = !pinned;
+      show(pinned);
+    });
+    document.addEventListener("click", function (ev) {
+      if (pinned && !box.contains(ev.target)) { pinned = false; show(false); }
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && box.classList.contains("open")) {
+        pinned = false; show(false); btn.focus();
+      }
+    });
+    show(false);
+  })();
 
   apply();
 })();

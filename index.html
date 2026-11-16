@@ -91,6 +91,33 @@
     100%{box-shadow:0 3px 10px rgba(13,132,146,.25),0 0 0 0 rgba(18,166,181,0)}
   }
 
+  /* ---------- header popovers: reward code + WeChat official account ----------
+     Both live in the header, so both panels open downwards; the footer WeChat
+     one opens upwards. One rule set keeps the two triggers visually identical. */
+  .coffee,.wechat-top{position:relative;display:inline-flex;align-items:center;flex:0 0 auto}
+  .coffee-trigger,.wechat-top-trigger{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;
+    border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--teal);
+    font-family:inherit;font-size:13px;font-weight:650;line-height:1.4;cursor:pointer;
+    transition:border-color .18s,color .18s,background .18s}
+  .coffee-trigger svg,.wechat-top-trigger svg{width:15px;height:15px;flex:0 0 auto;fill:currentColor}
+  .coffee-trigger:hover,.coffee-trigger[aria-expanded="true"],
+  .wechat-top-trigger:hover,.wechat-top-trigger[aria-expanded="true"]{
+    border-color:#bfe9ef;color:var(--teal-bright);background:var(--teal-soft)}
+  .coffee-pop,.wechat-top-pop{position:absolute;right:0;top:calc(100% + 12px);z-index:70;
+    width:min(216px,calc(100vw - 36px));padding:14px 14px 12px;
+    background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-hover);
+    text-align:center;opacity:0;visibility:hidden;pointer-events:none;
+    transform:translateY(-10px) scale(.97);transform-origin:top right}
+  /* Visibility is owned by the class alone, as in .wechat-pop: a frozen
+     animation clock must never strand a functional panel half-transparent. */
+  .coffee.open .coffee-pop,.wechat-top.open .wechat-top-pop{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+  .coffee-pop::after,.wechat-top-pop::after{content:"";position:absolute;right:26px;top:-7px;width:12px;height:12px;
+    background:#fff;border-left:1px solid var(--line);border-top:1px solid var(--line);
+    transform:rotate(45deg)}
+  .coffee-pop img,.wechat-top-pop img{display:block;width:100%;max-width:188px;height:auto;margin:0 auto 10px;border-radius:8px}
+  .coffee-pop b,.wechat-top-pop b{display:block;font-size:13px;color:var(--ink)}
+  .coffee-pop span,.wechat-top-pop span{display:block;margin-top:3px;font-size:11.5px;color:var(--muted)}
+
   /* ---------- product tab ---------- */
   .tabbar{background:rgba(255,255,255,.55);border-bottom:1px solid var(--line)}
   .tabbar-inner{display:flex;align-items:center;gap:18px}
@@ -427,6 +454,11 @@
     .arch-backends{grid-template-columns:1fr}
     .stats{grid-template-columns:1fr 1fr}
     .lang-btn{padding:5px 9px;font-size:12px}
+    /* Keep both header QR triggers round icons so the two language buttons
+       keep their full tap targets on narrow phones. */
+    .coffee-trigger span,.wechat-top-trigger span{display:none}
+    .coffee-trigger,.wechat-top-trigger{padding:7px}
+    .header-inner{gap:9px}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
@@ -447,6 +479,32 @@
       </span>
     </a>
     <span class="header-spacer"></span>
+    <div class="coffee">
+      <button class="coffee-trigger" type="button" id="coffee-btn" aria-expanded="false"
+              aria-controls="coffee-pop" data-i18n-aria="coffee.aria" aria-label="Buy me a coffee">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 3H4v10a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4V3zm-2 5h-2V6h2v2zm-4 0h-2V6h2v2zm-4 0H8V6h2v2zM2 9h2v5H2V9zm18 0h2v5h-2V9zM4 20h16v2H4v-2z"/></svg>
+        <span data-i18n="coffee.label">Coffee</span>
+      </button>
+      <div class="coffee-pop" id="coffee-pop" role="group" data-i18n-aria="coffee.pop.aria"
+           aria-label="Buy me a coffee" aria-hidden="true">
+        <img src="buy-me-a-coffee.JPG" alt="Landapi buy-me-a-coffee code" width="188" data-i18n-alt="coffee.img.alt">
+        <b data-i18n="coffee.pop.title">Buy me a coffee</b>
+        <span data-i18n="coffee.pop.hint">WeChat · Landapi</span>
+      </div>
+    </div>
+    <div class="wechat-top">
+      <button class="wechat-top-trigger" type="button" id="wechat-top-btn" aria-expanded="false"
+              aria-controls="wechat-top-pop" data-i18n-aria="wechat.aria" aria-label="Show the WeChat QR code">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z"/></svg>
+        <span data-i18n="wechat.label">WeChat</span>
+      </button>
+      <div class="wechat-top-pop" id="wechat-top-pop" role="group" data-i18n-aria="wechat.pop.aria"
+           aria-label="WeChat QR code" aria-hidden="true">
+        <img src="qrcode.jpg" alt="Landapi WeChat QR code" width="184" height="184" data-i18n-alt="wechat.qr.alt">
+        <b data-i18n="wechat.pop.title">Scan to follow</b>
+        <span data-i18n="wechat.pop.hint">WeChat · Landapi</span>
+      </div>
+    </div>
     <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Language">
       <button class="lang-btn" type="button" data-lang="en" aria-pressed="true">EN</button>
       <button class="lang-btn" type="button" data-lang="zh" aria-pressed="false">中文</button>
@@ -825,6 +883,12 @@
       "wechat.qr.alt": `Landapi WeChat QR code`,
       "wechat.pop.title": `Scan to follow`,
       "wechat.pop.hint": `WeChat · Landapi`,
+      "coffee.label": `Coffee`,
+      "coffee.aria": `Show the buy-me-a-coffee code`,
+      "coffee.pop.aria": `Buy-me-a-coffee code`,
+      "coffee.img.alt": `Landapi buy-me-a-coffee code`,
+      "coffee.pop.title": `Buy me a coffee`,
+      "coffee.pop.hint": `WeChat · Landapi`,
       "k1.title": `OpenAI-compatible`,
       "k1.body": `Three generation dialects with streaming, tool calls and the same engine behind them; thinking is off by default unless the request sets it.`,
       "k2.title": `Anthropic-compatible`,
@@ -962,6 +1026,12 @@
       "wechat.qr.alt": `Landapi 公众号二维码`,
       "wechat.pop.title": `扫码关注`,
       "wechat.pop.hint": `微信 · Landapi`,
+      "coffee.label": `赞赏`,
+      "coffee.aria": `显示微信赞赏码`,
+      "coffee.pop.aria": `微信赞赏码`,
+      "coffee.img.alt": `Landapi 微信赞赏码`,
+      "coffee.pop.title": `请我喝杯咖啡`,
+      "coffee.pop.hint": `微信 · Landapi`,
       "k1.title": `OpenAI 兼容`,
       "k1.body": `三种生成方言共用同一套引擎，支持流式输出与工具调用；不传思考字段时默认关闭思考。`,
       "k2.title": `Anthropic 兼容`,
@@ -1356,13 +1426,12 @@
   });
   selectSt(hashToSt() || "overview");
 
-  /* Footer QR: a pointer hover previews it, a click pins it (touch and
-     keyboard), and clicking outside or Escape always dismisses. aria-hidden
-     follows the same state as the CSS visibility. */
-  (function () {
-    var box = document.querySelector(".wechat");
-    var btn = document.getElementById("wechat-btn");
-    var pop = document.getElementById("wechat-pop");
+  /* QR popovers (footer WeChat, header reward code + header WeChat): a mouse
+     hover previews one, a click pins it (touch and keyboard), and clicking
+     outside or Escape dismisses it. aria-hidden follows the same state as the
+     CSS visibility. All instances share the logic so they cannot drift apart;
+     moving between them or clicking another trigger closes the previous one. */
+  function wirePopover(box, btn, pop) {
     if (!box || !btn || !pop) return;
     var pinned = false;
     function show(on) {
@@ -1391,7 +1460,16 @@
       }
     });
     show(false);
-  })();
+  }
+  wirePopover(document.querySelector(".wechat"),
+              document.getElementById("wechat-btn"),
+              document.getElementById("wechat-pop"));
+  wirePopover(document.querySelector(".coffee"),
+              document.getElementById("coffee-btn"),
+              document.getElementById("coffee-pop"));
+  wirePopover(document.querySelector(".wechat-top"),
+              document.getElementById("wechat-top-btn"),
+              document.getElementById("wechat-top-pop"));
 
   apply();
 })();
